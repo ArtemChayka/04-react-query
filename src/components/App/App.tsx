@@ -21,6 +21,7 @@ export default function App() {
     isLoading,
     isPending,
     isError,
+    isSuccess,
     error,
   } = useQuery({
     queryKey: ["movies", searchQuery, page],
@@ -30,7 +31,6 @@ export default function App() {
     placeholderData: keepPreviousData,
   });
 
-  const isSuccess = !!moviesData && !isError;
 
   useEffect(() => {
     if (isError && error) {
@@ -48,7 +48,7 @@ export default function App() {
     ) {
       toast.error("No movies found for your request.");
     }
-  }, [moviesData, searchQuery, isPending, isSuccess]);
+  }, [isSuccess, moviesData, searchQuery, isPending]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
