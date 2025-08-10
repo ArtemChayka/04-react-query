@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import ReactPaginate from "react-paginate";
 import toast, { Toaster } from "react-hot-toast";
 import { type Movie } from "../../types/movie";
@@ -19,18 +19,40 @@ export default function App() {
   const {
     data: moviesData,
     isLoading,
+    isPending,
     isError,
     error,
   } = useQuery({
     queryKey: ["movies", searchQuery, page],
     queryFn: () => fetchMovies(searchQuery, page),
-    enabled: !!searchQuery, // дозволяє якщо є запит
+    enabled: !!searchQuery.trim(),
     select: (data) => data,
+    placeholderData: keepPreviousData,
   });
+
+  const isSuccess = !!moviesData && !isError;
+
+  useEffect(() => {
+    if (isError && error) {
+      toast.error("Failed to fetch movies. Please try again.");
+    }
+  }, [isError, error]);
+
+  useEffect(() => {
+    if (
+      isSuccess &&
+      moviesData &&
+      moviesData.results.length === 0 &&
+      !isPending &&
+      searchQuery.trim()
+    ) {
+      toast.error("No movies found for your request.");
+    }
+  }, [moviesData, searchQuery, isPending, isSuccess]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setPage(1); // скинули до 1 стор
+    setPage(1);
   };
 
   const handlePageChange = ({ selected }: { selected: number }) => {
@@ -46,29 +68,16 @@ export default function App() {
     setSelectedMovie(null);
   };
 
-  // toast відпрацьовує якщо нема результату
-  if (moviesData && moviesData.results.length === 0 && !isLoading) {
-    toast.error("No movies found for your request.");
-  }
-
-  // toast відпрацьовує якщо помилканема результату
-  if (isError && error) {
-    toast.error("Failed to fetch movies. Please try again.");
-  }
-
   const totalPages = moviesData?.total_pages || 0;
   const movies = moviesData?.results || [];
 
   return (
-    <div>
+    <div className={css.container}>
       <SearchBar onSubmit={handleSearch} />
-
-      {isLoading && <Loader />}
+      {isPending && isLoading && <Loader />}
       {isError && <ErrorMessage />}
-      {!isLoading && !isError && (
+      {isSuccess && (
         <>
-          <MovieGrid movies={movies} onSelect={handleMovieSelect} />
-
           {totalPages > 1 && (
             <ReactPaginate
               pageCount={totalPages}
@@ -84,6 +93,7 @@ export default function App() {
               disabledClassName={css.disabled}
             />
           )}
+          <MovieGrid movies={movies} onSelect={handleMovieSelect} />
         </>
       )}
 
@@ -91,7 +101,16 @@ export default function App() {
         <MovieModal movie={selectedMovie} onClose={handleModalClose} />
       )}
 
-      <Toaster position="top-right" />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 2000,
+          style: {
+            background: "#333",
+            color: "#fff",
+          },
+        }}
+      />
     </div>
   );
 }
