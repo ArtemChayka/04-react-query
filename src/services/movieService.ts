@@ -2,7 +2,7 @@ import axios from "axios";
 import { type MoviesResponse } from "../types/movie";
 
 export const fetchMovies = async (query: string, page: number): Promise<MoviesResponse> => {
-  const response = await axios.get<MoviesResponse>(
+  const res = await axios.get<MoviesResponse>(
     "https://api.themoviedb.org/3/search/movie",
     {
       params: {
@@ -14,7 +14,7 @@ export const fetchMovies = async (query: string, page: number): Promise<MoviesRe
       },
     }
   );
-console.log(response);
+console.log(res);
 
-  return response.data;
+  return res.data;
 };

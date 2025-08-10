@@ -24,13 +24,13 @@ export default function App() {
   } = useQuery({
     queryKey: ["movies", searchQuery, page],
     queryFn: () => fetchMovies(searchQuery, page),
-    enabled: !!searchQuery, // Only run query when searchQuery exists
+    enabled: !!searchQuery, // дозволяє якщо є запит
     select: (data) => data,
   });
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setPage(1); // Reset to first page on new search
+    setPage(1); // скинули до 1 стор
   };
 
   const handlePageChange = ({ selected }: { selected: number }) => {
@@ -46,12 +46,12 @@ export default function App() {
     setSelectedMovie(null);
   };
 
-  // Show toast for no results
+  // toast відпрацьовує якщо нема результату
   if (moviesData && moviesData.results.length === 0 && !isLoading) {
     toast.error("No movies found for your request.");
   }
 
-  // Show toast for errors
+  // toast відпрацьовує якщо помилканема результату
   if (isError && error) {
     toast.error("Failed to fetch movies. Please try again.");
   }
